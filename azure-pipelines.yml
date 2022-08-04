@@ -1,0 +1,29 @@
+trigger:
+- main
+
+pool:
+  vmImage: windows-latest
+
+variables:
+- group: 'CodeSignGroup'
+
+steps:
+
+- task: DotNetCoreCLI@2
+  inputs:
+   command: 'custom'
+   custom: 'tool'
+   arguments: 'install --global azuresigntool'
+  displayName: "Azure SignToolのインストール"
+
+- task: CmdLine@2
+  displayName: 'コード署名処理'
+  inputs:
+    script: AzureSignTool sign -du "https://example.com/" -kvt "$(TenantID)" -kvu "$(KeyContainerURI)" -kvi "$(AppID)" -kvs "$(Secret)" -kvc "TestPCKS0721" -v "$(Pipeline.Workspace)\s\ConsoleTest0721.exe"
+
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: '$(Pipeline.Workspace)'
+    artifact: 'drop'
+    publishLocation: 'pipeline'
+  displayName: "署名ファイルの発行"
